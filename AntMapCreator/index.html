@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #canvas {
+        cursor: crosshair;
+        user-select: none;
+      }
+
+      #palette {
+        display: flex;
+        gap: 2px;
+      }
+
+      .clr {
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        border: none;
+        transition-duration: 0.2s;
+      }
+
+      .clr[data-selected='true'] {
+        border: solid 3px rgba(255, 255, 255, 0.5);
+        margin-top: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="1080" height="720"></canvas>
+    <br />
+    <div id="palette"></div>
+
+    <script src="./dist/bundle.js"></script>
+  </body>
+</html>
