@@ -18,6 +18,7 @@ export default class FoodGoal extends Goal {
   onFinish(ant: Ant, sim: AntSimulator): void {
     const pos = ant.getPosition();
     sim.removePixelObjectAt({ x: Math.round(pos.x), y: Math.round(pos.y) });
+    ant.setAngle(ant.getAngle() + Math.PI);
     ant.setGoal(new HomeGoal());
   }
 }

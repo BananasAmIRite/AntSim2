@@ -13,6 +13,7 @@ export default class Ant {
   private pheromoneObjective: PheromoneGoal | undefined;
   private pheromoneToEmit: PheromoneType | undefined;
   private goal: Goal | undefined;
+  private steerStrength: number;
   constructor(map: AntSimulator, pos: Vector2, initialAngle: number) {
     this.position = pos;
     this.angle = initialAngle;
@@ -23,6 +24,9 @@ export default class Ant {
     this.goal = new FoodGoal();
     this.pheromoneToEmit = undefined;
     this.pheromoneObjective = undefined;
+
+    this.steerStrength = Math.PI / 12;
+    // this.steerStrength = 0.15 * Math.random() * 0.1 + 0.95;
   }
 
   runFrame() {
@@ -46,8 +50,8 @@ export default class Ant {
 
   private updateAngle() {
     const forward = this.sense(0);
-    const left = this.sense(Math.PI / 12);
-    const right = this.sense(-Math.PI / 12);
+    const left = this.sense(this.steerStrength);
+    const right = this.sense(-this.steerStrength);
     // console.log(`forward: ${forward}, left: ${left}, right: ${right}`);
 
     // console.log(`right: ${right}`);
@@ -57,13 +61,13 @@ export default class Ant {
     if ((right < forward && right < left && right !== 0) || (right > 0 && forward === 0 && left === 0)) {
       // console.log('turn right');
 
-      this.angle -= Math.PI / 12;
+      this.angle -= this.steerStrength;
     } else if ((left < forward && left < right && left !== 0) || (left > 0 && forward === 0 && right === 0)) {
       // console.log('turn left');
 
-      this.angle += Math.PI / 12;
+      this.angle += this.steerStrength;
     }
-    // this.angle *= Math.random() * 0.02 + 0.99;
+    this.angle *= Math.random() * 0.2 + 0.9;
   }
 
   private updatePosition() {
@@ -143,5 +147,9 @@ export default class Ant {
 
   getPheromoneToEmit() {
     return this.pheromoneToEmit;
+  }
+
+  setAngle(angle: number) {
+    this.angle = angle;
   }
 }

@@ -78,7 +78,6 @@ export default class AntSimulator {
       const pos = pixel.getPos();
       ctx.fillRect(pos.x * this.unitSize, pos.y * this.unitSize, this.unitSize, this.unitSize);
     }
-    // throw new Error();
   }
 
   private renderAnts(ctx: CanvasRenderingContext2D) {
@@ -126,8 +125,8 @@ export default class AntSimulator {
     // console.log('updating pheromones');
 
     // let changes: Function[] = [];
-    this.pheromoneMap.for((phermone, x, y) => {
-      for (const pheromoneType of PheromoneTypes) {
+    this.pheromoneMap.for((pheromone, x, y) => {
+      for (const pheromoneType of pheromone.getPheromones()) {
         // calculate average
         // const leftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y }, pheromoneType);
         // const topLeftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y: y - 1 }, pheromoneType);
@@ -138,7 +137,8 @@ export default class AntSimulator {
         // const bottomPixel = this.pheromoneMap.getPheromoneLevel({ x, y: y + 1 }, pheromoneType);
         // const bottomRightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y: y + 1 }, pheromoneType);
 
-        const middle = this.pheromoneMap.getPheromoneLevel({ x, y }, pheromoneType);
+        // const middle = this.pheromoneMap.getPheromoneLevel({ x, y }, pheromoneType); // dumbass
+        const middle = pheromoneType.getLevel() || 0;
         // console.log('m: ' + middle);
 
         // const average =
@@ -155,11 +155,12 @@ export default class AntSimulator {
 
         //   console.log(average);
 
-        if (Math.max(middle - 0.6, 0) !== middle) {
-          // const a = () =>
-          this.pheromoneMap.set({ x, y }, pheromoneType, Math.max(middle - 0.6, 0));
-          // changes.push(a);
-        }
+        // if (Math.max(middle - 1, 0) !== middle) {
+        // const a = () =>
+        // this.pheromoneMap.set({ x, y }, pheromoneType.getType(), Math.max(middle - 1, 0));
+        pheromone.updatePheromoneLevels(pheromoneType.getType(), Math.max(middle - 1, 0));
+        // changes.push(a);
+        // }
         // );
         // changes = [...changes, 1];
       }
@@ -219,7 +220,7 @@ export default class AntSimulator {
   }
 
   public spawnAnt(angle: number = 0) {
-    const pos = { x: 15, y: 15 }; // TODO: make something that determines the map pixel at which to spawn the ants based on the red spawn pixels
+    const pos = { x: 500, y: 250 }; // TODO: make something that determines the map pixel at which to spawn the ants based on the red spawn pixels
 
     this.ants.push(new Ant(this, pos, angle));
   }
@@ -229,8 +230,8 @@ export default class AntSimulator {
   }
 
   public start() {
-    for (let i = 0; i < 1; i++) {
-      this.spawnAnt(-Math.random() * Math.PI);
+    for (let i = 0; i < 100; i++) {
+      this.spawnAnt(-Math.random() * Math.PI * 2);
     }
     // for (let x = 5; x < 10; x++) {
     //   for (let y = 5; y < 10; y++) {
