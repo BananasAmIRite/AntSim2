@@ -1,21 +1,22 @@
-import PheromoneData from './PheromoneData';
 import { hexToRGB } from './utils';
 import Vector2 from './Vector2';
-import PheromoneMap from './PheromoneMap';
 import Ant from './Ant';
 import { PheromoneType, PheromoneTypes } from './Pheromone';
 import PixelObject, { getPixelType } from './PixelObject';
+import NonDiffusivePheromoneMap from './NonDiffusivePheromoneMap';
 
 export default class AntSimulator {
   private pixels: PixelObject[];
-  private pheromoneMap!: PheromoneMap;
-  private canvas: HTMLCanvasElement;
-  private unitSize: number;
+  private pheromoneMap!: NonDiffusivePheromoneMap;
+  public canvas: HTMLCanvasElement;
+  public unitSize: number;
   private ants: Ant[];
+  private stopped: boolean = false;
 
   constructor(canvas: HTMLCanvasElement, imageMap: HTMLImageElement, unitSize: number) {
     this.pixels = [];
     this.ants = [];
+    this.pheromoneMap = new NonDiffusivePheromoneMap();
     this.canvas = canvas;
     this.unitSize = unitSize;
     canvas.width = imageMap.naturalWidth * unitSize;
@@ -34,19 +35,20 @@ export default class AntSimulator {
 
     tempCtx.drawImage(map, 0, 0, map.naturalWidth, map.naturalHeight); // downscaled, accurate version
 
-    const pheromoneMap: PheromoneData[][] = [];
+    // const pheromoneMap: PheromoneData[][] = [];
     for (let y = 0; y < tempCnv.height; y++) {
-      const pheromoneArray = [];
       for (let x = 0; x < tempCnv.width; x++) {
         const imgData = tempCtx.getImageData(x, y, 1, 1).data;
-        pheromoneArray.push(new PheromoneData({ x, y }));
+        // pheromoneArray.push(new PheromoneData({ x, y }));
+        // console.log(`rgba(${imgData[0]}, ${imgData[1]}, ${imgData[2]}, ${imgData[3]})`);
+
         const pixelType = getPixelType(`rgba(${imgData[0]}, ${imgData[1]}, ${imgData[2]}, ${imgData[3]})`);
         if (!pixelType) continue;
         this.pixels.push(new PixelObject({ x, y }, pixelType));
       }
-      pheromoneMap.push(pheromoneArray);
+      // pheromoneMap.push(pheromoneArray);
     }
-    this.pheromoneMap = new PheromoneMap(pheromoneMap);
+    // this.pheromoneMap = new PheromoneMap(pheromoneMap);
 
     // this.render();
   }
@@ -58,12 +60,14 @@ export default class AntSimulator {
 
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('no context to draw to');
+
     this.updateMap();
     this.renderMap(ctx);
     this.renderPheromones(ctx);
     this.renderAnts(ctx);
+    if (this.stopped) return;
     requestAnimationFrame(() => this.render());
-    // setTimeout(() => this.render(), 1000);
+    // setTimeout(() => this.render(), 500);
   }
 
   private renderMap(ctx: CanvasRenderingContext2D) {
@@ -121,51 +125,57 @@ export default class AntSimulator {
   private updatePheromones() {
     // console.log('updating pheromones');
 
-    const changes = [];
-    for (let y = 0; y < this.pheromoneMap.getMap().length; y++) {
-      for (let x = 0; x < this.pheromoneMap.getRow(y).length; x++) {
-        for (const pheromoneType of PheromoneTypes) {
-          // calculate average
-          // const leftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y }, pheromoneType);
-          // const topLeftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y: y - 1 }, pheromoneType);
-          // const rightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y }, pheromoneType);
-          // const topRightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y: y - 1 }, pheromoneType);
-          // const topPixel = this.pheromoneMap.getPheromoneLevel({ x, y: y - 1 }, pheromoneType);
-          // const bottomLeftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y: y + 1 }, pheromoneType);
-          // const bottomPixel = this.pheromoneMap.getPheromoneLevel({ x, y: y + 1 }, pheromoneType);
-          // const bottomRightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y: y + 1 }, pheromoneType);
-          const middle = this.pheromoneMap.getPheromoneLevel({ x, y }, pheromoneType);
+    // let changes: Function[] = [];
+    this.pheromoneMap.for((phermone, x, y) => {
+      for (const pheromoneType of PheromoneTypes) {
+        // calculate average
+        // const leftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y }, pheromoneType);
+        // const topLeftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y: y - 1 }, pheromoneType);
+        // const rightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y }, pheromoneType);
+        // const topRightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y: y - 1 }, pheromoneType);
+        // const topPixel = this.pheromoneMap.getPheromoneLevel({ x, y: y - 1 }, pheromoneType);
+        // const bottomLeftPixel = this.pheromoneMap.getPheromoneLevel({ x: x - 1, y: y + 1 }, pheromoneType);
+        // const bottomPixel = this.pheromoneMap.getPheromoneLevel({ x, y: y + 1 }, pheromoneType);
+        // const bottomRightPixel = this.pheromoneMap.getPheromoneLevel({ x: x + 1, y: y + 1 }, pheromoneType);
 
-          // const average =
-          //   (leftPixel +
-          //     topLeftPixel +
-          //     rightPixel +
-          //     topRightPixel +
-          //     topPixel +
-          //     bottomLeftPixel +
-          //     bottomPixel +
-          //     bottomRightPixel +
-          //     middle) /
-          //   9;
+        const middle = this.pheromoneMap.getPheromoneLevel({ x, y }, pheromoneType);
+        // console.log('m: ' + middle);
 
-          //   console.log(average);
+        // const average =
+        //   (leftPixel +
+        //     topLeftPixel +
+        //     rightPixel +
+        //     topRightPixel +
+        //     topPixel +
+        //     bottomLeftPixel +
+        //     bottomPixel +
+        //     bottomRightPixel +
+        //     middle) /
+        //   9;
 
-          if (Math.max(middle - 5, 0) !== middle)
-            // changes.push(() =>
-            this.pheromoneMap.get({ x, y }).updatePheromoneLevels(pheromoneType, Math.max(middle - 5, 0));
-          // );
-          // changes.push(1);
+        //   console.log(average);
+
+        if (Math.max(middle - 0.6, 0) !== middle) {
+          // const a = () =>
+          this.pheromoneMap.set({ x, y }, pheromoneType, Math.max(middle - 0.6, 0));
+          // changes.push(a);
         }
-
-        // for (const change of changes) {
-        //   change();
-        // }
-
-        // const average = middle;
-
-        // this.set({ x, y }, Math.floor(Math.max(average - 5, 0)));
+        // );
+        // changes = [...changes, 1];
       }
-    }
+    });
+    // for (const p of ) {
+    //   for (let x = 0; x < this.pheromoneMap.getRow(y).length; x++) {
+
+    //     // for (const change of changes) {
+    //     //   change();
+    //     // }
+
+    //     // const average = middle;
+
+    //     // this.set({ x, y }, Math.floor(Math.max(average - 5, 0)));
+    //   }
+    // }
     // console.log('finished updating pheromones');
   }
 
@@ -209,17 +219,17 @@ export default class AntSimulator {
   }
 
   public spawnAnt(angle: number = 0) {
-    const pos = { x: 0, y: 0 }; // TODO: make something that determines the map pixel at which to spawn the ants based on the red spawn pixels
+    const pos = { x: 15, y: 15 }; // TODO: make something that determines the map pixel at which to spawn the ants based on the red spawn pixels
 
     this.ants.push(new Ant(this, pos, angle));
   }
 
-  public getPheromoneLevel(v: Vector2) {
+  public getPheromone(v: Vector2) {
     return this.pheromoneMap.get(v);
   }
 
   public start() {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1; i++) {
       this.spawnAnt(-Math.random() * Math.PI);
     }
     // for (let x = 5; x < 10; x++) {
@@ -243,5 +253,16 @@ export default class AntSimulator {
 
   public getHeight() {
     return this.canvas.height / this.unitSize;
+  }
+
+  public getPixelObjectAt(v: Vector2) {
+    return this.pixels.find((e) => e.getPos().x === v.x && e.getPos().y === v.y);
+  }
+
+  public removePixelObjectAt(v: Vector2) {
+    this.pixels.splice(
+      this.pixels.findIndex((e) => e.getPos().x === v.x && e.getPos().y === v.y),
+      1
+    );
   }
 }

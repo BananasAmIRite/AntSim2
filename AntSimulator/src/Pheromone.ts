@@ -22,17 +22,15 @@ export default class Pheromone {
   public setLevel(level: number) {
     this.level = level;
     if (this.level <= 10) {
-      console.log('removal');
-
-      const i = this.data.getPheromones().indexOf(this);
+      // const i = this.data.getPheromones().indexOf(this);
       // console.log(i);
-      if (i === -1) console.log(`Error? Pos: [${this.data.getLocation().x}, ${this.data.getLocation().y}]`);
+      // if (i === -1) console.log(`Error? Pos: [${this.data.getLocation().x}, ${this.data.getLocation().y}]`);
 
       // console.log(
       //   `Len before [${this.data.getLocation().x}, ${this.data.getLocation().y}]: ` + this.data.getPheromones()
       // );
 
-      this.data.getPheromones().splice(this.data.getPheromones().indexOf(this), 1);
+      this.data.removePheromone(this);
       // console.log(
       //   `Len after: [${this.data.getLocation().x}, ${this.data.getLocation().y}]` + this.data.getPheromones()
       // );

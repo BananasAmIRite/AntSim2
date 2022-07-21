@@ -18,8 +18,9 @@ export default class PixelObject {
 }
 
 export enum PixelType {
-  SPAWN = 'rgba(255, 0, 0, 1)',
-  FOOD = 'rgba(0, 128, 0, 1)',
+  SPAWN = 'rgba(255, 0, 0, 255)',
+  FOOD = 'rgba(0, 128, 0, 255)',
+  // NONE = 'rgba(0, 0, 0, 255)',
 }
 
 export function getPixelType(val: string): PixelType | undefined {

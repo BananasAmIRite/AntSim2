@@ -3,12 +3,18 @@ import PheromoneGoal from './PheromoneGoal';
 import Vector2 from './Vector2';
 
 export default class PheromoneData {
-  private pheromones: Pheromone[];
+  protected pheromones: Pheromone[];
   private location: Vector2;
+
+  private static id = 0;
+
+  public id: number;
 
   constructor(loc: Vector2) {
     this.pheromones = [];
     this.location = loc;
+    this.id = PheromoneData.id;
+    PheromoneData.id++;
   }
 
   test(goal: PheromoneGoal): number | undefined {
@@ -32,5 +38,9 @@ export default class PheromoneData {
 
   getLocation() {
     return this.location;
+  }
+
+  public removePheromone(pheromone: Pheromone) {
+    this.getPheromones().splice(this.getPheromones().indexOf(pheromone), 1);
   }
 }
