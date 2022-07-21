@@ -25,7 +25,8 @@ export default class Ant {
     this.pheromoneToEmit = undefined;
     this.pheromoneObjective = undefined;
 
-    this.steerStrength = Math.PI / 12;
+    // this.steerStrength = Math.PI / 12;
+    this.steerStrength = 0.15;
     // this.steerStrength = 0.15 * Math.random() * 0.1 + 0.95;
   }
 
@@ -58,24 +59,37 @@ export default class Ant {
     // console.log(`left: ${left}`);
     // console.log(`forward: ${forward}`);
 
-    if ((right < forward && right < left && right !== 0) || (right > 0 && forward === 0 && left === 0)) {
-      // console.log('turn right');
+    // if ((right < forward && right < left && right !== 0) || (right > 0 && forward === 0 && left === 0)) {
+    // if (right > forward && right > left) {
+    //   // console.log('turn right');
 
-      this.angle -= this.steerStrength;
-    } else if ((left < forward && left < right && left !== 0) || (left > 0 && forward === 0 && right === 0)) {
-      // console.log('turn left');
+    //   this.angle -= this.steerStrength;
+    // } else if ((left < forward && left < right && left !== 0) || (left > 0 && forward === 0 && right === 0)) {
+    //   // console.log('turn left');
 
+    //   this.angle += this.steerStrength;
+    // }
+
+    if (forward > left && forward > right) {
+    } else if (forward < left && left < right) {
+      // turn randomly, which is taken care by .move()
+    } else if (left < right) {
       this.angle += this.steerStrength;
+    } else if (right < left) {
+      this.angle -= this.steerStrength;
+    } else {
+      // face forward
     }
-    this.angle *= Math.random() * 0.2 + 0.9;
+
+    this.angle *= Math.random() * 0.1 + 0.95;
   }
 
   private updatePosition() {
     // if (this.pheromoneTrail.length > this.map.pheromoneTrailDisappearIterations) this.pheromoneTrail.shift(); // kinda volatile but ehhh
 
     const newPos = {
-      x: this.position.x + Math.cos(this.angle),
-      y: this.position.y + Math.sin(this.angle),
+      x: this.position.x + Math.cos(this.angle) * 2,
+      y: this.position.y + Math.sin(this.angle) * 2,
     };
 
     if (newPos.x >= this.map.getWidth() - 1 || newPos.x <= 0 || newPos.y >= this.map.getHeight() - 1 || newPos.y <= 0) {

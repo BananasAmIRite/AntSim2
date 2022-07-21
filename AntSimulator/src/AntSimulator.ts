@@ -4,10 +4,12 @@ import Ant from './Ant';
 import { PheromoneType, PheromoneTypes } from './Pheromone';
 import PixelObject, { getPixelType } from './PixelObject';
 import NonDiffusivePheromoneMap from './NonDiffusivePheromoneMap';
+import EfficientPheromoneMap from './EfficientPheromoneMap';
+import EfficientPheromoneData from './EfficientPheromoneData';
 
 export default class AntSimulator {
   private pixels: PixelObject[];
-  private pheromoneMap!: NonDiffusivePheromoneMap;
+  private pheromoneMap!: EfficientPheromoneMap;
   public canvas: HTMLCanvasElement;
   public unitSize: number;
   private ants: Ant[];
@@ -16,7 +18,7 @@ export default class AntSimulator {
   constructor(canvas: HTMLCanvasElement, imageMap: HTMLImageElement, unitSize: number) {
     this.pixels = [];
     this.ants = [];
-    this.pheromoneMap = new NonDiffusivePheromoneMap();
+    // this.pheromoneMap = new EfficientPheromoneMap();
     this.canvas = canvas;
     this.unitSize = unitSize;
     canvas.width = imageMap.naturalWidth * unitSize;
@@ -35,25 +37,26 @@ export default class AntSimulator {
 
     tempCtx.drawImage(map, 0, 0, map.naturalWidth, map.naturalHeight); // downscaled, accurate version
 
-    // const pheromoneMap: PheromoneData[][] = [];
+    const pheromoneMap: (EfficientPheromoneData | null)[][] = [];
     for (let y = 0; y < tempCnv.height; y++) {
+      const pheromoneArray = [];
       for (let x = 0; x < tempCnv.width; x++) {
         const imgData = tempCtx.getImageData(x, y, 1, 1).data;
-        // pheromoneArray.push(new PheromoneData({ x, y }));
+        pheromoneArray.push(null);
         // console.log(`rgba(${imgData[0]}, ${imgData[1]}, ${imgData[2]}, ${imgData[3]})`);
 
         const pixelType = getPixelType(`rgba(${imgData[0]}, ${imgData[1]}, ${imgData[2]}, ${imgData[3]})`);
         if (!pixelType) continue;
         this.pixels.push(new PixelObject({ x, y }, pixelType));
       }
-      // pheromoneMap.push(pheromoneArray);
+      pheromoneMap.push(pheromoneArray);
     }
-    // this.pheromoneMap = new PheromoneMap(pheromoneMap);
+    this.pheromoneMap = new EfficientPheromoneMap(pheromoneMap);
 
     // this.render();
   }
 
-  private render() {
+  private async render() {
     // console.log(this.ants);
 
     // console.log('rendering');
@@ -61,7 +64,7 @@ export default class AntSimulator {
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('no context to draw to');
 
-    this.updateMap();
+    await this.updateMap();
     this.renderMap(ctx);
     this.renderPheromones(ctx);
     this.renderAnts(ctx);
@@ -101,24 +104,20 @@ export default class AntSimulator {
     });
   }
 
-  private updateMap() {
-    // return Promise.allSettled([
-    //   new Promise((res, rej) => {
-    //     this.updatePheromones();
-    //     res(null);
-    //   }),
-    //   ...this.ants.map(
-    //     (ant) =>
-    //       new Promise((res, rej) => {
-    //         ant.runFrame();
-    //         res(null);
-    //       })
-    //   ),
-    // ]);
-    for (const ant of this.ants) {
-      ant.runFrame();
-    }
-    this.updatePheromones();
+  private async updateMap() {
+    return Promise.allSettled([
+      new Promise((res, rej) => {
+        this.updatePheromones();
+        res(null);
+      }),
+      ...this.ants.map(
+        (ant) =>
+          new Promise((res, rej) => {
+            ant.runFrame();
+            res(null);
+          })
+      ),
+    ]);
   }
 
   private updatePheromones() {
@@ -155,12 +154,12 @@ export default class AntSimulator {
 
         //   console.log(average);
 
-        // if (Math.max(middle - 1, 0) !== middle) {
-        // const a = () =>
-        // this.pheromoneMap.set({ x, y }, pheromoneType.getType(), Math.max(middle - 1, 0));
-        pheromone.updatePheromoneLevels(pheromoneType.getType(), Math.max(middle - 1, 0));
-        // changes.push(a);
-        // }
+        if (Math.max(middle - 0.6375, 0) !== middle) {
+          // const a = () =>
+          // this.pheromoneMap.set({ x, y }, pheromoneType.getType(), Math.max(middle - 1, 0));
+          pheromone.updatePheromoneLevels(pheromoneType.getType(), Math.max(middle - 0.6375, 0));
+          // changes.push(a);
+        }
         // );
         // changes = [...changes, 1];
       }
@@ -230,7 +229,7 @@ export default class AntSimulator {
   }
 
   public start() {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 250; i++) {
       this.spawnAnt(-Math.random() * Math.PI * 2);
     }
     // for (let x = 5; x < 10; x++) {

@@ -15,7 +15,7 @@ function onMapPick(e: SubmitEvent) {
   display('canvas');
   const cnv = document.getElementById('canvas') as HTMLCanvasElement;
   if (!cnv) throw new Error('no canvas present');
-  createMap(cnv, f, 2);
+  createMap(cnv, f, 1);
 }
 
 function display(elem: string) {

@@ -18,6 +18,7 @@ export default class HomeGoal extends Goal {
   }
   onFinish(ant: Ant, sim: AntSimulator): void {
     ant.setGoal(new FoodGoal());
+    ant.setAngle(ant.getAngle() + Math.PI);
     // sim.spawnAnt(-Math.random() * Math.PI);
   }
 }
